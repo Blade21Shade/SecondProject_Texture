@@ -5,7 +5,7 @@
 #include <iostream>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
-float processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -131,15 +131,10 @@ int main() {
      glUniform1i(glGetUniformLocation(recProgram.ID, "ourTexture"), 0); // set it manually
      recProgram.setInt("ourTexture2", 1); // or with shader class
 
-     recProgram.setFloat("mixVal", 0.2);
-     float mixValVal = 0.2f;
-     float mixChange = 0.0f;
-     int mixValLoc = glGetUniformLocation(recProgram.ID, "mixVal");
-
      // Render loop
      while (!glfwWindowShouldClose(window)) {
           // Input
-          mixChange = processInput(window);
+          processInput(window);
 
           // Render/draw
           glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -152,13 +147,6 @@ int main() {
           glBindTexture(GL_TEXTURE_2D, texture2);
           
           recProgram.use(); // Even though we only have one program we should use it here for practice; if we wanted to use multiple we would need to
-          
-          // Check to make sure we aren't updating the mix value to be outside the range 0.0-1.0
-          if (!(mixValVal >= 1.0f && mixChange > 0.0f) && !(mixValVal <= 0.0f && mixChange < 0.0f)) {
-               mixValVal += mixChange;
-               recProgram.setFloat("mixVal", mixValVal);
-          }
-          
           glBindVertexArray(VAO);
           glDrawElements(GL_TRIANGLES, numOfRecIndices, GL_UNSIGNED_INT, 0);
           glBindVertexArray(0);
@@ -188,15 +176,8 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
 }
 
 // General user input (keyboard only for now)
-float processInput(GLFWwindow* window) {
+void processInput(GLFWwindow* window) {
      if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
           glfwSetWindowShouldClose(window, true);
      }
-     else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-          return -0.003f;
-     }
-     else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-          return  0.003f;
-     }
-     return 0.0;
 }
