@@ -1,8 +1,8 @@
-#include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <custom/program.h>
 #include <stb/stb_image.h>
+#include <custom/program.h>
+#include <iostream>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -17,12 +17,6 @@ int main() {
      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
      glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-     // Load glad
-     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-          std::cout << "Failed to initialize GLAD" << std::endl;
-          return -1;
-     }
-
      // Initial window creation and viewport setup
      GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Window Title", NULL, NULL);
      if (!window) {
@@ -31,6 +25,12 @@ int main() {
           return -1;
      }
      glfwMakeContextCurrent(window);
+
+     // Load glad
+     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+          std::cout << "Failed to initialize GLAD" << std::endl;
+          return -1;
+     }
      
      glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
      glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
@@ -49,21 +49,21 @@ int main() {
      };
 
      unsigned int recIndices[] = {
-          2, 1, 3, // Triangle 1
-          3, 1, 0 // Triangle 2
+          2, 1, 3, // Bottom triangle
+          3, 1, 0  // Top triangle
      };
 
      // Buffers and VAO
      unsigned int VBO, VAO, EBO;
+     glGenVertexArrays(1, &VAO);
      glGenBuffers(1, &VBO);
      glGenBuffers(1, &EBO);
-     glGenVertexArrays(1, &VAO);
 
      glBindVertexArray(VAO);
      glBindBuffer(GL_ARRAY_BUFFER, VBO);
      glBufferData(GL_ARRAY_BUFFER, sizeof(recVertices), recVertices, GL_STATIC_DRAW);
      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-     glBufferData(GL_ARRAY_BUFFER, sizeof(recIndices), recIndices, GL_STATIC_DRAW);
+     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(recIndices), recIndices, GL_STATIC_DRAW);
 
           // Vertex attribs
      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)0);
@@ -74,7 +74,33 @@ int main() {
      glEnableVertexAttribArray(2);
 
      glBindBuffer(GL_ARRAY_BUFFER, 0);
+     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); !!! This is wrong, you aren't supposed to unbind the element buffer before unbinding a VAO
+     glBindVertexArray(0);
      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+     // Setup image and texture 
+          // Texture setup
+     unsigned int texture;
+     glGenTextures(1, &texture);
+     glBindTexture(GL_TEXTURE_2D, texture);
+               // Params
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          // Image
+     int width, height, nrChannels;
+     unsigned char* data = stbi_load("container.jpg", &width, &height, &nrChannels, 0);
+               // Attempt to load image into texture
+     if (data) {
+          // Load image into texture
+          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+          glGenerateMipmap(GL_TEXTURE_2D);
+     }
+     else {
+          std::cout << "Failed to load texture" << std::endl;
+     }
+     stbi_image_free(data); // Free the image data once we've finished loading it    
 
      // Render loop
      while (!glfwWindowShouldClose(window)) {
@@ -86,8 +112,10 @@ int main() {
           glClear(GL_COLOR_BUFFER_BIT);
 
           recProgram.use();
+          glBindTexture(GL_TEXTURE_2D, texture); // OGL will send the texture to the fragment shader's "uniform sampler2D texture" to be used
+          
           glBindVertexArray(VAO);
-          glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+          glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // This may work using sizeof(recIndices) / sizeof(unsigned int) in place of 6 but I haven't tested it yet
           glBindVertexArray(0);
 
 
@@ -105,7 +133,7 @@ int main() {
      recProgram.deleteProgram();
 
      glfwTerminate();
-     return 1;
+     return 0;
 }
 
 // Utility functions

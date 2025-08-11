@@ -31,11 +31,7 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Import Stuff\fragmentShader.vert">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="..\..\Import Stuff\vertexShader.vert">
-      <Filter>Source Files</Filter>
-    </None>
+    <None Include="vertexShader.vert" />
+    <None Include="fragmentShader.vert" />
   </ItemGroup>
 </Project>
