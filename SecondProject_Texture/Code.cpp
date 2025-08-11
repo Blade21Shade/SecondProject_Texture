@@ -52,6 +52,7 @@ int main() {
           2, 1, 3, // Bottom triangle
           3, 1, 0  // Top triangle
      };
+     GLsizei numOfRecIndices = sizeof(recIndices) / sizeof(unsigned int); // So the draw call uses a calculated value isntead of a set one, less error prone
 
      // Buffers and VAO
      unsigned int VBO, VAO, EBO;
@@ -115,9 +116,8 @@ int main() {
           glBindTexture(GL_TEXTURE_2D, texture); // OGL will send the texture to the fragment shader's "uniform sampler2D texture" to be used
           
           glBindVertexArray(VAO);
-          glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // This may work using sizeof(recIndices) / sizeof(unsigned int) in place of 6 but I haven't tested it yet
+          glDrawElements(GL_TRIANGLES, numOfRecIndices, GL_UNSIGNED_INT, 0);
           glBindVertexArray(0);
-
 
           // Poll events
           glfwPollEvents();
