@@ -29,6 +29,9 @@
     <Image Include="..\..\FirstProject\FirstProject\container.jpg">
       <Filter>Source Files</Filter>
     </Image>
+    <Image Include="..\..\Import Stuff\awesomeSmile.png">
+      <Filter>Source Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="vertexShader.vert" />

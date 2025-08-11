@@ -133,6 +133,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\FirstProject\FirstProject\container.jpg" />
+    <Image Include="..\..\Import Stuff\awesomeSmile.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="fragmentShader.vert" />

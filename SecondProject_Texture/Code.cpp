@@ -103,6 +103,34 @@ int main() {
      }
      stbi_image_free(data); // Free the image data once we've finished loading it    
 
+          // Second image
+     unsigned int texture2;
+     glGenTextures(1, &texture2);
+     glBindTexture(GL_TEXTURE_2D, texture2); // This should kick "texture" off
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // The new texture doesn't have these bound yet, we need to do so again
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+     stbi_set_flip_vertically_on_load(true);
+     data = stbi_load("awesomeSmile.png", &width, &height, &nrChannels, 0); // The setup was done before, so just bopy and paste
+     if (data) {
+          // Load image into texture
+          // .png has A value so we need to specify that when loading, note we still store it as GL_RGB
+          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+          glGenerateMipmap(GL_TEXTURE_2D);
+     }
+     else {
+          std::cout << "Failed to load texture" << std::endl;
+     }
+     stbi_image_free(data); // Free the image data once we've finished loading it   
+
+     // The uniforms only need to be set once, so they can be done outside the loop
+     // You still need to use the program before setting them
+     recProgram.use();
+     // We need to send the location values
+     glUniform1i(glGetUniformLocation(recProgram.ID, "ourTexture"), 0); // set it manually
+     recProgram.setInt("ourTexture2", 1); // or with shader class
+
      // Render loop
      while (!glfwWindowShouldClose(window)) {
           // Input
@@ -112,9 +140,13 @@ int main() {
           glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
           glClear(GL_COLOR_BUFFER_BIT);
 
-          recProgram.use();
-          glBindTexture(GL_TEXTURE_2D, texture); // OGL will send the texture to the fragment shader's "uniform sampler2D texture" to be used
+               // Shader activations
+          glActiveTexture(GL_TEXTURE0);
+          glBindTexture(GL_TEXTURE_2D, texture);
+          glActiveTexture(GL_TEXTURE1);
+          glBindTexture(GL_TEXTURE_2D, texture2);
           
+          recProgram.use(); // Even though we only have one program we should use it here for practice; if we wanted to use multiple we would need to
           glBindVertexArray(VAO);
           glDrawElements(GL_TRIANGLES, numOfRecIndices, GL_UNSIGNED_INT, 0);
           glBindVertexArray(0);
