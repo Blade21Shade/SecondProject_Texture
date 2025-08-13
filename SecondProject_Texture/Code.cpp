@@ -10,15 +10,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// 2D Array setup
+using glm2DArray = std::vector<glm::vec3>;
+
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-void doAllTransformations(glm::mat4& translationMatrix, std::vector<glm::vec3> translationVals, float rotationAngles[], std::vector<glm::vec3> rotationAxes, std::vector<glm::vec3> scaleValues);
+void doAllTransformations(glm::mat4& translationMatrix, glm2DArray translationVals, float rotationAngles[], glm2DArray rotationAxes, glm2DArray scaleValues);
+void updateRotationAngle(int whichRotationAsIndex, float newValue, float rotationAngles[]);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
-// 2D Array setup
-using glm2DArray = std::vector<glm::vec3>;
 
 int main() {
      // GLFW setup
@@ -142,21 +143,14 @@ int main() {
      recProgram.setInt("ourTexture2", 1); // or with shader class
 
           // Translation
-     //glm::mat4 trans = glm::mat4(1.0f);
-     //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0)); // Rotate 90 degrees about the z-axis
-     //trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-               // Sending it to the program
      unsigned int transformLoc = glGetUniformLocation(recProgram.ID, "transform");
-     // Transformation values to send to doAllTransformations()
-     // A 2D array using a mix of vector glm::vector
-          // An exterior vector means I can add information later
-          // glm::vec3 matches the argument expected by glm's functions
+          // Arrays for holding the various transformation information needed by glm
 
      glm2DArray translationVectors{
           { 0.25,  0.25, 0.25},
           {-0.50, -0.50, 0.0}
      };
-     float rotationAngles[] = {
+     float rotationAngles[] = { // The number of entries here needs to match the number entires in rotationAxes
           45.0,
           90.0
      };
@@ -168,8 +162,6 @@ int main() {
           {0.5, 0.5, 0.5}
      };
 
-     /*glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));*/
-
      // Render loop
      while (!glfwWindowShouldClose(window)) {
           // Input
@@ -179,7 +171,7 @@ int main() {
           glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
           glClear(GL_COLOR_BUFFER_BIT);
 
-               // Shader activations
+               // Shader texture activations
           glActiveTexture(GL_TEXTURE0);
           glBindTexture(GL_TEXTURE_2D, texture);
           glActiveTexture(GL_TEXTURE1);
@@ -188,10 +180,9 @@ int main() {
           recProgram.use(); // Even though we only have one program we should use it here for practice; if we wanted to use multiple we would need to
           // Translation
           glm::mat4 trans = glm::mat4(1.0f);
-          
-          // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0)); // Rotate 90 degrees about the z-axis
+          float dynamicInRadians = (float)glfwGetTime() * (180/ 3.1415);
+          updateRotationAngle(0, dynamicInRadians, rotationAngles);
           doAllTransformations(trans, translationVectors, rotationAngles, rotationAxes, scaleVectors);
-          // Sending it to the program
           glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
           
           
@@ -230,6 +221,7 @@ void processInput(GLFWwindow* window) {
      }
 }
 
+// Does all transformation/translation changes to the object via glm functions
 void doAllTransformations(glm::mat4 &translationMatrix, glm2DArray translationVals, float rotationAngles[], glm2DArray rotationAxes, glm2DArray scaleValues) {
      // Translations
      for (int i = 0; i < translationVals.size(); i++) {
@@ -252,5 +244,19 @@ void doAllTransformations(glm::mat4 &translationMatrix, glm2DArray translationVa
      // Scalings
      for (int i = 0; i < scaleValues.size(); i++) {
           translationMatrix = glm::scale(translationMatrix, scaleValues.at(i));
+     }
+}
+
+void updateRotationAngle(int whichRotationAsIndex, float newValue , float rotationAngles[]) {
+     if (whichRotationAsIndex < 0) {
+          return;
+     }
+
+     int numOfRotations = sizeof(rotationAngles) / sizeof(float);
+     if (whichRotationAsIndex < numOfRotations) {
+          rotationAngles[whichRotationAsIndex] = newValue;
+     }
+     else {
+          std::cout << "Given index is beyond size of rotationAngles: No change made" << std::endl;
      }
 }
