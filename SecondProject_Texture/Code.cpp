@@ -18,8 +18,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // 2D Array setup
-template <typename T, std::size_t Row, std::size_t Col>
-using Array2d = std::array<std::array<T, Col>, Row>;
+using glm2DArray = std::vector<glm::vec3>;
 
 int main() {
      // GLFW setup
@@ -153,17 +152,19 @@ int main() {
           // An exterior vector means I can add information later
           // glm::vec3 matches the argument expected by glm's functions
 
-     std::vector<glm::vec3> translationVectors{
-          {0.25, 0.25, 0.25 },
-          /*{2.0, 2.0, 2.0}*/
+     glm2DArray translationVectors{
+          { 0.25,  0.25, 0.25},
+          {-0.50, -0.50, 0.0}
      };
      float rotationAngles[] = {
-          45.0
+          45.0,
+          90.0
      };
-     std::vector<glm::vec3> rotationAxes = {
+     glm2DArray rotationAxes = {
+          {0.0, 0.0, 1.0},
           {0.0, 0.0, 1.0}
      };
-     std::vector<glm::vec3> scaleVectors = {
+     glm2DArray scaleVectors = {
           {0.5, 0.5, 0.5}
      };
 
@@ -229,19 +230,27 @@ void processInput(GLFWwindow* window) {
      }
 }
 
-void doAllTransformations(glm::mat4 &translationMatrix, std::vector<glm::vec3> translationVals, float rotationAngles[], std::vector<glm::vec3> rotationAxes, std::vector<glm::vec3> scaleValues) {
+void doAllTransformations(glm::mat4 &translationMatrix, glm2DArray translationVals, float rotationAngles[], glm2DArray rotationAxes, glm2DArray scaleValues) {
      // Translations
      for (int i = 0; i < translationVals.size(); i++) {
           translationMatrix = glm::translate(translationMatrix, translationVals.at(i));
      }
 
-     //// Rotations
-     //for (int i = 0; i < rotationAxes.size(); i++) {
-     //     glm::rotate(translationMatrix, rotationAngles[i], rotationAxes[i]);
-     //}
-
-     //// Scalings
-     //for (int i = 0; i < scaleValues.size(); i++) {
-     //     glm::translate(translationMatrix, scaleValues[i]);
-     //}
+     // Rotations
+          // Make sure the number of angles matches the number of rotation axes
+     int anglesLength = sizeof(rotationAngles) / sizeof (float);
+     int axesLength = rotationAxes.size();
+     if (anglesLength == axesLength) {
+          for (int i = 0; i < rotationAxes.size(); i++) {
+               translationMatrix = glm::rotate(translationMatrix, glm::radians(rotationAngles[i]), rotationAxes.at(i));
+          }
+     }
+     else {
+          std::cout << "Numer of rotation angles doesn't match number of rotation axes: No rotation occruing" << std::endl;
+     }
+     
+     // Scalings
+     for (int i = 0; i < scaleValues.size(); i++) {
+          translationMatrix = glm::scale(translationMatrix, scaleValues.at(i));
+     }
 }
