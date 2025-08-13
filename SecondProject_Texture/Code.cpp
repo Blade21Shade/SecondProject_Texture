@@ -4,6 +4,11 @@
 #include <custom/program.h>
 #include <iostream>
 
+// Translation includes
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
@@ -130,6 +135,14 @@ int main() {
      // We need to send the location values
      glUniform1i(glGetUniformLocation(recProgram.ID, "ourTexture"), 0); // set it manually
      recProgram.setInt("ourTexture2", 1); // or with shader class
+
+          // Translation
+     glm::mat4 trans = glm::mat4(1.0f);
+     trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0)); // Rotate 90 degrees about the z-axis
+     trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+               // Sending it to the program
+     unsigned int transformLoc = glGetUniformLocation(recProgram.ID, "transform");
+     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
      // Render loop
      while (!glfwWindowShouldClose(window)) {
