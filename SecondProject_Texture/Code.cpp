@@ -137,12 +137,12 @@ int main() {
      recProgram.setInt("ourTexture2", 1); // or with shader class
 
           // Translation
-     glm::mat4 trans = glm::mat4(1.0f);
-     trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0)); // Rotate 90 degrees about the z-axis
-     trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+     //glm::mat4 trans = glm::mat4(1.0f);
+     //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0)); // Rotate 90 degrees about the z-axis
+     //trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
                // Sending it to the program
      unsigned int transformLoc = glGetUniformLocation(recProgram.ID, "transform");
-     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+     /*glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));*/
 
      // Render loop
      while (!glfwWindowShouldClose(window)) {
@@ -160,6 +160,13 @@ int main() {
           glBindTexture(GL_TEXTURE_2D, texture2);
           
           recProgram.use(); // Even though we only have one program we should use it here for practice; if we wanted to use multiple we would need to
+          // Translation
+          glm::mat4 trans = glm::mat4(1.0f);
+          trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0)); // Rotate 90 degrees about the z-axis
+               // Sending it to the program
+          glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+          
+          
           glBindVertexArray(VAO);
           glDrawElements(GL_TRIANGLES, numOfRecIndices, GL_UNSIGNED_INT, 0);
           glBindVertexArray(0);
