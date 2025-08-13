@@ -3,6 +3,7 @@
 #include <stb/stb_image.h>
 #include <custom/program.h>
 #include <iostream>
+#include <vector>
 
 // Translation includes
 #include <glm/glm.hpp>
@@ -11,9 +12,14 @@
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void doAllTransformations(glm::mat4& translationMatrix, std::vector<glm::vec3> translationVals, float rotationAngles[], std::vector<glm::vec3> rotationAxes, std::vector<glm::vec3> scaleValues);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+
+// 2D Array setup
+template <typename T, std::size_t Row, std::size_t Col>
+using Array2d = std::array<std::array<T, Col>, Row>;
 
 int main() {
      // GLFW setup
@@ -142,6 +148,25 @@ int main() {
      //trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
                // Sending it to the program
      unsigned int transformLoc = glGetUniformLocation(recProgram.ID, "transform");
+     // Transformation values to send to doAllTransformations()
+     // A 2D array using a mix of vector glm::vector
+          // An exterior vector means I can add information later
+          // glm::vec3 matches the argument expected by glm's functions
+
+     std::vector<glm::vec3> translationVectors{
+          {0.25, 0.25, 0.25 },
+          /*{2.0, 2.0, 2.0}*/
+     };
+     float rotationAngles[] = {
+          45.0
+     };
+     std::vector<glm::vec3> rotationAxes = {
+          {0.0, 0.0, 1.0}
+     };
+     std::vector<glm::vec3> scaleVectors = {
+          {0.5, 0.5, 0.5}
+     };
+
      /*glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));*/
 
      // Render loop
@@ -162,8 +187,10 @@ int main() {
           recProgram.use(); // Even though we only have one program we should use it here for practice; if we wanted to use multiple we would need to
           // Translation
           glm::mat4 trans = glm::mat4(1.0f);
-          trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0)); // Rotate 90 degrees about the z-axis
-               // Sending it to the program
+          
+          // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0)); // Rotate 90 degrees about the z-axis
+          doAllTransformations(trans, translationVectors, rotationAngles, rotationAxes, scaleVectors);
+          // Sending it to the program
           glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
           
           
@@ -200,4 +227,21 @@ void processInput(GLFWwindow* window) {
      if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
           glfwSetWindowShouldClose(window, true);
      }
+}
+
+void doAllTransformations(glm::mat4 &translationMatrix, std::vector<glm::vec3> translationVals, float rotationAngles[], std::vector<glm::vec3> rotationAxes, std::vector<glm::vec3> scaleValues) {
+     // Translations
+     for (int i = 0; i < translationVals.size(); i++) {
+          translationMatrix = glm::translate(translationMatrix, translationVals.at(i));
+     }
+
+     //// Rotations
+     //for (int i = 0; i < rotationAxes.size(); i++) {
+     //     glm::rotate(translationMatrix, rotationAngles[i], rotationAxes[i]);
+     //}
+
+     //// Scalings
+     //for (int i = 0; i < scaleValues.size(); i++) {
+     //     glm::translate(translationMatrix, scaleValues[i]);
+     //}
 }
