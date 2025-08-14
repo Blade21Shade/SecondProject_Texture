@@ -271,24 +271,33 @@ int main() {
           doAllTransformations(trans, translationVectors, rotationAngles, rotationAxes, scaleVectors);
           
           // 3D stuff
-          glm::mat4 model = glm::mat4(1.0f); // Worldspace
+          
           glm::mat4 view = glm::mat4(1.0f); // Camera
           glm::mat4 projection = glm::mat4(1.0f); // Clip/perspective
           
-          model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+          
           view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
           projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
           // Send uniforms information
           glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
-          glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+          
           glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
                // We set the projection matrix each frame here, but in practice it rarely changes and so its better to set it once outside the render loop
           glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
           
           glBindVertexArray(VAOcube);
-          glDrawElements(GL_TRIANGLES, numOfCubeIndices, GL_UNSIGNED_INT, 0);
+
+          for (int i = 0; i < 10; i++) {
+               glm::mat4 model = glm::mat4(1.0f); // Worldspace
+               model = glm::translate(model, cubePositions[i]);
+               float angle = 20.0f * i;
+               model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+               glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+               glDrawElements(GL_TRIANGLES, numOfCubeIndices, GL_UNSIGNED_INT, 0);
+          }
+          
           glBindVertexArray(0);
 
           // Poll events
