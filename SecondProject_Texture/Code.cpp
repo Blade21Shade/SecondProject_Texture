@@ -142,8 +142,15 @@ int main() {
      glUniform1i(glGetUniformLocation(recProgram.ID, "ourTexture"), 0); // set it manually
      recProgram.setInt("ourTexture2", 1); // or with shader class
 
-          // Translation
+     // 3D matrices
+     unsigned int modelLoc = glGetUniformLocation(recProgram.ID, "model");
+     unsigned int viewLoc = glGetUniformLocation(recProgram.ID, "view");
+     unsigned int projectionLoc = glGetUniformLocation(recProgram.ID, "projection");
+
+          // Transformation
      unsigned int transformLoc = glGetUniformLocation(recProgram.ID, "transform");
+     
+
           // Arrays for holding the various transformation information needed by glm
 
      glm2DArray translationVectors{
@@ -178,13 +185,26 @@ int main() {
           glBindTexture(GL_TEXTURE_2D, texture2);
           
           recProgram.use(); // Even though we only have one program we should use it here for practice; if we wanted to use multiple we would need to
-          // Translation
+          // Transformation
           glm::mat4 trans = glm::mat4(1.0f);
           float dynamicInRadians = (float)glfwGetTime() * (180/ 3.1415);
           updateRotationAngle(0, dynamicInRadians, rotationAngles);
           doAllTransformations(trans, translationVectors, rotationAngles, rotationAxes, scaleVectors);
-          glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
           
+          // 3D stuff
+          glm::mat4 model = glm::mat4(1.0f); // Worldspace
+          glm::mat4 view = glm::mat4(1.0f); // Camera
+          glm::mat4 projection = glm::mat4(1.0f); // Clip/perspective
+          
+          model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+          view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+          projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+          // Send uniforms information
+          glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+          glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+          glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+          glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
           
           glBindVertexArray(VAO);
           glDrawElements(GL_TRIANGLES, numOfRecIndices, GL_UNSIGNED_INT, 0);
