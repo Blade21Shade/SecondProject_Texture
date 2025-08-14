@@ -50,6 +50,83 @@ int main() {
      // Setup shaders
      Program recProgram("vertexShader.vert", "fragmentShader.vert");
 
+     // Cube stuff
+     float cubeVertices[] = {
+          // Viewport coords   // Color            // Texture coords
+          // Front
+          0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // front top right     0
+          0.5f, -0.5f,  0.5f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // front bottom right  1
+         -0.5f, -0.5f,  0.5f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // front bottom left   2
+         -0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f, // front top left      3
+         // Back
+          0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // back top right      4
+          0.5f, -0.5f, -0.5f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // back bottom right   5
+         -0.5f, -0.5f, -0.5f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // back bottom left    6
+         -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // back top left       7
+     };
+
+     unsigned int cubeIndices[] = {
+          // Front
+          2, 1, 3,
+          3, 1, 0,
+          // Back
+          6, 5, 7,
+          7, 5, 4,
+          // Right
+          0, 1, 5,
+          0, 5, 4,
+          // Left
+          7, 6, 2,
+          7, 2, 3,
+          // Top
+          7, 3, 0,
+          7, 0, 4,
+          // Bottom
+          6, 2, 1,
+          6, 1, 5
+     };
+     GLsizei numOfCubeIndices = sizeof(cubeIndices) / sizeof(unsigned int);
+
+     glm::vec3 cubePositions[] = {
+          glm::vec3(0.0f,  0.0f,  0.0f), // Original
+          glm::vec3(2.0f,  5.0f, -15.0f),
+          glm::vec3(-1.5f, -2.2f, -2.5f),
+          glm::vec3(-3.8f, -2.0f, -12.3f),
+          glm::vec3(2.4f, -0.4f, -3.5f),
+          glm::vec3(-1.7f,  3.0f, -7.5f),
+          glm::vec3(1.3f, -2.0f, -2.5f),
+          glm::vec3(1.5f,  2.0f, -2.5f),
+          glm::vec3(1.5f,  0.2f, -1.5f),
+          glm::vec3(-1.3f,  1.0f, -1.5f)
+     };
+
+
+     // Buffers and VAO
+     unsigned int VBOcube, VAOcube, EBOcube;
+     glGenVertexArrays(1, &VAOcube);
+     glGenBuffers(1, &VBOcube);
+     glGenBuffers(1, &EBOcube);
+
+     glBindVertexArray(VAOcube);
+     glBindBuffer(GL_ARRAY_BUFFER, VBOcube);
+     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOcube);
+     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cubeIndices), cubeIndices, GL_STATIC_DRAW);
+
+     // Vertex attribs
+     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)0);
+     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)(3 * sizeof(float)));
+     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void*)(6 * sizeof(float)));
+     glEnableVertexAttribArray(0);
+     glEnableVertexAttribArray(1);
+     glEnableVertexAttribArray(2);
+
+     // Unbind stuff
+     glBindBuffer(GL_ARRAY_BUFFER, 0);
+     glBindVertexArray(0);
+     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
      // Setup shape data
      float recVertices[] = {
           // Viewport coords   // Color            // Texture coords
@@ -86,7 +163,6 @@ int main() {
      glEnableVertexAttribArray(2);
 
      glBindBuffer(GL_ARRAY_BUFFER, 0);
-     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); !!! This is wrong, you aren't supposed to unbind the element buffer before unbinding a VAO
      glBindVertexArray(0);
      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -163,11 +239,13 @@ int main() {
      };
      glm2DArray rotationAxes = {
           {0.0, 0.0, 1.0},
-          {0.0, 0.0, 1.0}
+          {1.0, 0.0, 0.0}
      };
      glm2DArray scaleVectors = {
           {0.5, 0.5, 0.5}
      };
+
+     glEnable(GL_DEPTH_TEST);
 
      // Render loop
      while (!glfwWindowShouldClose(window)) {
@@ -176,7 +254,7 @@ int main() {
 
           // Render/draw
           glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-          glClear(GL_COLOR_BUFFER_BIT);
+          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                // Shader texture activations
           glActiveTexture(GL_TEXTURE0);
@@ -189,6 +267,7 @@ int main() {
           glm::mat4 trans = glm::mat4(1.0f);
           float dynamicInRadians = (float)glfwGetTime() * (180/ 3.1415);
           updateRotationAngle(0, dynamicInRadians, rotationAngles);
+          updateRotationAngle(1, dynamicInRadians, rotationAngles);
           doAllTransformations(trans, translationVectors, rotationAngles, rotationAxes, scaleVectors);
           
           // 3D stuff
@@ -198,16 +277,18 @@ int main() {
           
           model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
           view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-          projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+          projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
           // Send uniforms information
           glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
           glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
           glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+               // We set the projection matrix each frame here, but in practice it rarely changes and so its better to set it once outside the render loop
           glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
           
-          glBindVertexArray(VAO);
-          glDrawElements(GL_TRIANGLES, numOfRecIndices, GL_UNSIGNED_INT, 0);
+          glBindVertexArray(VAOcube);
+          glDrawElements(GL_TRIANGLES, numOfCubeIndices, GL_UNSIGNED_INT, 0);
           glBindVertexArray(0);
 
           // Poll events
